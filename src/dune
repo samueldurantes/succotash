@@ -1,0 +1,18 @@
+(executable
+ (name main)
+ (public_name succotash)
+  (libraries
+   opium
+   sexplib
+   argon2
+   jose
+   str
+   lwt
+   uuidm
+   caqti
+   caqti-lwt
+   caqti-driver-postgresql
+   ppx_rapper_lwt
+   ptime.clock.os)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_rapper lwt_ppx)))
