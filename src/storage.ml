@@ -108,8 +108,11 @@ module User = struct
           |sql}
           record_in]
     in
-    let id = Uuidm.create `V4 |> Uuidm.to_string in
-    let user = { id; name; email; password } in
+    let user =
+      let id = Uuidm.create `V4 |> Uuidm.to_string in
+      let password = Bcrypt.hash password |> Bcrypt.string_of_hash in
+      { id; name; email; password }
+    in
     let* () = Database.dispatch (insert user) in
     Lwt.return user
 end

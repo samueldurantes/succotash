@@ -25,7 +25,6 @@ module User = struct
       | Ok user -> user
       | Error error -> raise (Invalid_argument error)
     in
-    (* TODO: Encrypt password before saving on database *)
     let* { id; name; email; password = _ } = Storage.User.insert parsed_user in
     Lwt.return
       (Response.of_json
@@ -46,7 +45,11 @@ module User = struct
     let* user = Storage.User.find_by_email parsed_user.email in
     match user with
     | Some { id; name; email; password } ->
-        if String.trim password = String.trim parsed_user.password then
+        let is_password_correct =
+          let password_hashed = Bcrypt.hash_of_string password in
+          Bcrypt.verify parsed_user.password password_hashed
+        in
+        if is_password_correct then
           Lwt.return
             (Response.of_json
             @@ user_response_ok_to_yojson

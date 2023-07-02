@@ -21,11 +21,11 @@
     "@opam/ppx_rapper": "3.0.0",
     "@opam/ppx_rapper_lwt": "3.0.0",
     "@opam/tls": "*",
-    "@opam/argon2": "1.0.1",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/yojson": "*",
     "@opam/jose": "*",
-    "@opam/sexplib": "*"
+    "@opam/sexplib": "*",
+    "@opam/safepass": "*"
   },
   "devDependencies": {
     "@opam/ocaml-lsp-server": "*",

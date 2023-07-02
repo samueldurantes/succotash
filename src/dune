@@ -4,7 +4,7 @@
   (libraries
    opium
    sexplib
-   argon2
+   safepass
    jose
    str
    lwt
