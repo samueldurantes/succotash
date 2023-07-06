@@ -20,7 +20,7 @@ module Migrations = struct
         {sql|
           CREATE TABLE IF NOT EXISTS cards (
             id          UUID PRIMARY KEY NOT NULL,
-            value       DECIMAL NOT NULL,
+            value       INT NOT NULL,
             status      TEXT NOT NULL,
             created_by  UUID NOT NULL,
             FOREIGN KEY (created_by) REFERENCES users(id)
@@ -66,22 +66,6 @@ module User = struct
   }
   [@@deriving yojson]
 
-  let find_by_email email =
-    let read_one =
-      [%rapper
-        get_opt
-          {sql|
-            SELECT @string{id}, @string{name}, @string{email}, @string{password}
-            FROM users
-            WHERE email = %string{email}
-          |sql}
-          record_out]
-    in
-    let* user = Database.dispatch (read_one ~email) in
-    match user with
-    | Some user -> Lwt.return @@ Some user
-    | None -> Lwt.return None
-
   let find_by_id id =
     let read_one =
       [%rapper
@@ -94,6 +78,22 @@ module User = struct
           record_out]
     in
     let* user = Database.dispatch (read_one ~id) in
+    match user with
+    | Some user -> Lwt.return @@ Some user
+    | None -> Lwt.return None
+
+  let find_by_email email =
+    let read_one =
+      [%rapper
+        get_opt
+          {sql|
+            SELECT @string{id}, @string{name}, @string{email}, @string{password}
+            FROM users
+            WHERE email = %string{email}
+          |sql}
+          record_out]
+    in
+    let* user = Database.dispatch (read_one ~email) in
     match user with
     | Some user -> Lwt.return @@ Some user
     | None -> Lwt.return None
@@ -117,4 +117,49 @@ module User = struct
     Lwt.return user
 end
 
-(* module Card = struct end *)
+module Card = struct
+  type card = { value : int; status : string; created_by : string }
+  [@@deriving yojson]
+
+  type card_stored = {
+    id : string;
+    value : int;
+    status : string;
+    created_by : string;
+  }
+  [@@deriving yojson]
+
+  let find_by_id id =
+    let read_one =
+      [%rapper
+        get_opt
+          {sql|
+              SELECT @string{id}, @int{value}, @string{status}, @string{created_by}
+              FROM cards
+              WHERE id = %string{id}
+            |sql}
+          record_out]
+    in
+    let* card = Database.dispatch (read_one ~id) in
+    match card with
+    | Some card -> Lwt.return @@ Some card
+    | None -> Lwt.return None
+
+  let insert ({ value; status; created_by } : card) =
+    let insert =
+      [%rapper
+        execute
+          {sql|
+              INSERT INTO cards
+              VALUES(%string{id}, %int{value}, %string{status}, %string{created_by})
+            |sql}
+          record_in]
+    in
+    let user =
+      let id = Uuidm.create `V4 |> Uuidm.to_string in
+      (* TODO: create an ADT to status *)
+      { id; value; status; created_by }
+    in
+    let* () = Database.dispatch (insert user) in
+    Lwt.return user
+end
